@@ -1,0 +1,10 @@
+services:
+  prediction-api:
+    build:
+      context: .
+      dockerfile: ./prediction-api/Dockerfile
+  # TODO
+  # frontend:
+  #   build:
+  #     context: .
+  #     dockerfile: ./frontend/Dockerfile
