@@ -1,9 +1,13 @@
 """
+This Python script is the result of combining the codeblocks from a Jupyter Notebook used
+with AWS Sagemaker Studio to train a breast cancer prediction model. The code blocks are
+marked by comments with "---" and a quick description of the block.
 """
+# --- Imports
 import boto3
 import pandas
 import sagemaker
-from sklearn.datasets import load_breast_cancer
+from sklearn.datasets import dump_svmlight_file, load_breast_cancer
 from sklearn.model_selection import train_test_split
 
 # --- Load dataset
@@ -16,10 +20,13 @@ df["target"] = data.target  # Binary classification (0: Malignant, 1: Benign)
 train, test = train_test_split(df, test_size=0.2, random_state=42)
 
 # Save to CSV (SageMaker requires files in S3)
-train.to_csv("train.csv", index=False, header=False)
-test.to_csv("test.csv", index=False, header=False)
+# train.to_csv("train.csv", index=False, header=False)
+dump_svmlight_file(train, "train.libsvm")
+# test.to_csv("test.csv", index=False, header=False)
+dump_svmlight_file(train, "test.libsvm")
 print("Saved training and testing data to csv files")
 
+# --- Save dataset to S3
 # Save data to s3 bucket - only necessary once
 s3_bucket = "breast-cancer-ml-prediction"
 prefix = "breast-cancer-xgboost"
@@ -28,15 +35,15 @@ prefix = "breast-cancer-xgboost"
 s3 = boto3.client("s3")
 
 # Upload files
-s3.upload_file("train.csv", s3_bucket, f"{prefix}/train.csv")
-s3.upload_file("test.csv", s3_bucket, f"{prefix}/test.csv")
+s3.upload_file("train.libsvm", s3_bucket, f"{prefix}/train.libsvm")
+s3.upload_file("test.libsvm", s3_bucket, f"{prefix}/test.libsvm")
 print(f"Data uploaded to s3://{s3_bucket}/{prefix}/")
 
 # --- Create container
 # Get SageMaker session and role
 print("Creating Sagemaker session")
 sagemaker_session = sagemaker.Session()
-role = "arn:aws:iam::your-account-id:role/service-role/AmazonSageMaker-ExecutionRole"
+role = "arn:aws:iam::476114121159:role/service-role/AmazonSageMaker-ExecutionRole-20250213T120500"
 
 # Define the built-in XGBoost container
 print("Creating sagemaker container")
@@ -66,10 +73,12 @@ xgb_estimator.set_hyperparameters(
     eval_metric="auc"  # Use AUC for performance evaluation
 )
 
+# --- Train model
 # Specify input data location in S3
 train_input = f"s3://{s3_bucket}/{prefix}/train.csv"
 
 # Start training
+train_input = sagemaker.inputs.TrainingInput(f"s3://{s3_bucket}/{prefix}/train.csv", content_type="text/csv")
 xgb_estimator.fit({"train": train_input})
 print("Model is training...")
 
