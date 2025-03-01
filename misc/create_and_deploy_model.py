@@ -19,11 +19,21 @@ df["target"] = data.target  # Binary classification (0: Malignant, 1: Benign)
 # Split data
 train, test = train_test_split(df, test_size=0.2, random_state=42)
 
+# Separate features (X) and labels (y) for libsvm format
+x_train = train.drop(columns=["target"])
+y_train = train["target"]
+# Same for testing data
+x_test = test.drop(columns=["target"])
+y_test = test["target"]
+
 # Save to CSV (SageMaker requires files in S3)
+# train.to_csv("train_with_headers.csv", index=False, header=True)
 # train.to_csv("train.csv", index=False, header=False)
-dump_svmlight_file(train, "train.libsvm")
+# Save to libvvm file - this is the required format
+dump_svmlight_file(x_train, y_train, "train.libsvm")
+# Same as above, but for training data
 # test.to_csv("test.csv", index=False, header=False)
-dump_svmlight_file(train, "test.libsvm")
+dump_svmlight_file(x_test, y_test, "test.libsvm")
 print("Saved training and testing data to csv files")
 
 # --- Save dataset to S3
