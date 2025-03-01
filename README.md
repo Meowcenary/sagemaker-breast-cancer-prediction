@@ -8,6 +8,9 @@ endpoint
 - frontend/ - Web UI for app
 - misc/ - Jupyter Notebook for training model on SageMaker, script for deploying
 sagemaker endpoint, Ec2 dependency installation script
+- data/ - The data used to train the model in libsvm and csv format. The
+SageMaker model training script imports the data from a Python library, but it
+is included here for debugging or general viewing
 
 ### AWS Configuration
 There are several steps that need to be taken on AWS in order to train the model
