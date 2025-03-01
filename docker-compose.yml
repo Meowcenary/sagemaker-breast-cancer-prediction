@@ -3,6 +3,11 @@ services:
     build:
       context: .
       dockerfile: ./prediction-api/Dockerfile
+    # the Ec2 instance exposes port 80 for http traffic and until there is a
+    # frontend, this will be how the app is interacted with
+    ports:
+      - "80:8080"
+    restart: always
   # TODO
   # frontend:
   #   build:
