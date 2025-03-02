@@ -2,10 +2,10 @@
 FROM golang:1.23 AS build
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /api
 
 # Copy all files
-COPY . ./
+COPY ./prediction-api/ ./
 
 # Download all dependencies
 RUN go mod download
