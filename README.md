@@ -42,3 +42,10 @@ works well enough for this project.
 Given more time, a better approach would be to use Ansible to create a Docker
 image of the project, transfer the image to a target server, and then run the
 image on that server.
+
+Maintenance
+---
+Use the below command to clear Docker resources to free up space
+```
+docker system prune --volumes -a
+```
