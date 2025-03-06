@@ -15,6 +15,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/sagemakerruntime"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 func featureOrder() []string {
@@ -198,6 +200,7 @@ func performPrediction(w http.ResponseWriter, buf bytes.Buffer) string {
 }
 
 func predictHandler(w http.ResponseWriter, r *http.Request) {
+	incrementRequestCount(r)
 	// Get the query params
 	queryParams := r.URL.Query()
 
@@ -232,6 +235,7 @@ func predictHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func predictHandlerJson(w http.ResponseWriter, r *http.Request) {
+	incrementRequestCount(r)
 	requestData, err := decodeJsonToValues(r)
 
 	// Ensure we have at least one feature
@@ -292,11 +296,41 @@ func predictHandlerJson(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"prediction": predictionStr})
 }
 
+func apiStatusHandler(w http.ResponseWriter, r *http.Request) {
+	incrementRequestCount(r)
+	// Return prediction value as JSON
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"code": "200"})
+}
+
+// Use this to increment request counts for each endpoint
+func incrementRequestCount(r *http.Request) {
+	label := fmt.Sprintf("%s - %s", r.URL.Path, r.Method)
+	requestCount.WithLabelValues(label).Inc()
+}
+
+var requestCount = prometheus.NewCounterVec(
+	prometheus.CounterOpts{
+		Name: "requests_total",
+		Help: "Total number of requests",
+	},
+	[]string{"method"},
+)
+
+func init() {
+	// having this call in init() ensures it registers properly
+	prometheus.MustRegister(requestCount)
+	// Set to 0
+	requestCount.WithLabelValues("GET - ").Add(0)
+}
+
 func main() {
-  // router is similar to demo video, but different handlers
+	// router is similar to demo video, but different handlers
 	router := mux.NewRouter()
+	router.HandleFunc("/status", apiStatusHandler).Methods("GET")
 	router.HandleFunc("/predict", predictHandler).Methods("GET")
 	router.HandleFunc("/predict/json", predictHandlerJson).Methods("GET")
+	router.Handle("/metrics", promhttp.Handler())
 
 	fmt.Println("Server is running on port 8080")
 	log.Fatal(http.ListenAndServe(":8080", router))
