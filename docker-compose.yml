@@ -21,6 +21,24 @@ services:
     ports:
       - "9090:9090"
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9090 || exit 1"]
+      interval: 10s
+      retries: 10
+      start_period: 10s
+      timeout: 10s
+    networks:
+      - predictor_network
+  grafana:
+    image: grafana/grafana
+    volumes:
+      - grafana-data:/grafana-data
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
     networks:
       - predictor_network
 
@@ -31,3 +49,4 @@ networks:
 
 volumes:
   prometheus-data:
+  grafana-data:

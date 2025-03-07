@@ -20,6 +20,12 @@ There are several steps that need to be taken on AWS in order to train the model
 
 ### Model Training
 
+### Monitoring
+- Prometheus is used to monitor resource usage and gather usage statistics. It
+runs on port 9090, but this can be changed in docker-compose.yml.
+- Grafana is available on port 3000. This can also be changed in
+docker-compose.yml
+
 ### Deployment
 - Create a key-value pair on AWS and download the key to the development machine
 - Create an Ec2 instance on AWS
