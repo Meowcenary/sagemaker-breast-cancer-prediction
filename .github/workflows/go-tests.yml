@@ -1,0 +1,20 @@
+name: Go test
+
+on:
+  push:
+    branches:
+      - master  # Runs when pushing to master
+
+jobs:
+  run-tests:
+    name: Go test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run tests
+        run: |
+          cd prediction-api/
+          go test .
